@@ -23,11 +23,11 @@
                 </ul>
 
 
-                <ul class="navbar-nav">
+                <ul class="navbar-nav" v-if="$store.state.user.is_login">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            huangjunhao
+                            {{ $store.state.user.username }}
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                             <li>
@@ -36,8 +36,21 @@
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="#">退出</a></li>
+                            <li><a class="dropdown-item" href="#" @click="logout">退出</a></li>
                         </ul>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav" v-else>
+                    <li class="nav-item">
+                        <router-link class="nav-link" :to="{ name: 'user_account_login' }" role="button">
+                            登录
+                        </router-link>
+                    </li>
+                    <li class="nav-item">
+                        <router-link class="nav-link" :to="{ name: 'user_account_register' }" role="button">
+                            注册
+                        </router-link>
                     </li>
                 </ul>
             </div>
@@ -48,13 +61,21 @@
 <script>
 import { useRoute } from 'vue-router';
 import { computed } from 'vue'; // 实时计算函数
+import { useStore } from 'vuex';
 
 export default {
     setup() {
+        const store = useStore();
         const route = useRoute();
         let route_name = computed(() => route.name);
+
+        const logout = () => {
+            store.dispatch("logout");
+        }
+
         return {
-            route_name
+            route_name,
+            logout
         }
     }
 }

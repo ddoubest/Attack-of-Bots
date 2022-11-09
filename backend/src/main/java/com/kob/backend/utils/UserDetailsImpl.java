@@ -1,4 +1,4 @@
-package com.kob.backend.service.utils.impl;
+package com.kob.backend.utils;
 
 import com.kob.backend.pojo.User;
 import lombok.AllArgsConstructor;

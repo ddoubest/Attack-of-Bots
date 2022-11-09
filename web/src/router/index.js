@@ -4,6 +4,8 @@ import RanklistIndexView from '@/views/ranklist/RanklistIndexView'
 import RecordIndexView from '@/views/record/RecordIndexView'
 import UserBotIndexView from '@/views/user/bot/UserBotIndexView'
 import NotFoundView from '@/views/error/NotFoundView'
+import UserAccountLoginView from '@/views/user/account/UserAccountLoginView'
+import UserAccountRegisterView from '@/views/user/account/UserAccountRegisterView'
 
 const routes = [
   // 网址重定向
@@ -31,6 +33,16 @@ const routes = [
     path: "/user/bot/",
     name: "user_bot_index",
     component: UserBotIndexView,
+  },
+  {
+    path: "/user/account/login/",
+    name: "user_account_login",
+    component: UserAccountLoginView,
+  },
+  {
+    path: "/user/account/register/",
+    name: "user_account_register",
+    component: UserAccountRegisterView,
   },
   {
     path: "/404/",

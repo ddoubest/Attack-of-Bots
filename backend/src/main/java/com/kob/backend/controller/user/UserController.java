@@ -40,7 +40,7 @@ public class UserController {
     public String addUser(@PathVariable Integer userId, @PathVariable String username, @PathVariable String password) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodePwd = passwordEncoder.encode((password));
-        User user = new User(userId, username, encodePwd);
+        User user = new User(userId, username, encodePwd, null);
         userMapper.insert(user);
         return "Add User Successfully!";
     }
