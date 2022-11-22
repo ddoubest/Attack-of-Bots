@@ -16,7 +16,8 @@ export default {
         const store = useStore();
 
         onMounted(() => { // 整个页面加载完成之后需要执行的操作
-            new GameMap(canvas.value.getContext('2d'), parent.value, store);
+            const gameObject = new GameMap(canvas.value.getContext('2d'), parent.value, store);
+            store.commit("updateGameObject", gameObject);
         })
 
         return {
