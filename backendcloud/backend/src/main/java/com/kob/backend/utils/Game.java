@@ -2,7 +2,11 @@ package com.kob.backend.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.kob.backend.consumer.WebSocketServer;
+import com.kob.backend.pojo.Bot;
 import com.kob.backend.pojo.Record;
+import org.springframework.security.core.parameters.P;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -10,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Game extends Thread {
     public static final int[] dx = {-1, 0, 1, 0};
     public static final int[] dy = {0, 1, 0, -1};
+    private static final String addBotUrl = "http://127.0.0.1:3002/bot/add/";
 
     private final int rows;
     private final int cols;
@@ -24,14 +29,29 @@ public class Game extends Thread {
     private String status = "playing"; // playing -> finished
     private String loser = ""; // all:平局, A, B
 
-    public Game(int rows, int cols, int inner_walls_count, Integer idA, Integer idB) {
+    public Game(int rows, int cols, int inner_walls_count, Integer idA, Bot botA, Integer idB, Bot botB) {
         this.rows = rows;
         this.cols = cols;
         this.inner_walls_count = inner_walls_count;
         this.g = new int[rows][cols];
         this.random = new Random();
-        this.playerA = new Player(idA, rows - 2, 1, new ArrayList<>());
-        this.playerB = new Player(idB, 1, cols - 2, new ArrayList<>());
+
+        Integer botIdA = -1, botIdB = -1;
+        String botCodeA = "", botCodeB = "";
+
+        if (botA != null) {
+            botIdA = botA.getId();
+            botCodeA = botA.getContent();
+        }
+
+        if (botB != null) {
+            botIdB = botB.getId();
+            botCodeB = botB.getContent();
+        }
+
+        this.playerA = new Player(idA, botIdA, botCodeA, rows - 2, 1, new ArrayList<>());
+        this.playerB = new Player(idB, botIdB, botCodeB, 1, cols - 2, new ArrayList<>());
+
         createMap();
     }
 
@@ -96,6 +116,41 @@ public class Game extends Thread {
         return playerB;
     }
 
+    /**
+     * 返回当前游戏的局面信息
+     * @param player 操作本体 me
+     * @return 地图字符串编码#我的sx#我的sy#(我的操作)#对手的sx#对手的sy#(对手的操作)
+     */
+    private String getGameStatus(Player player) {
+        Player me, you;
+        if (playerA.getUserId().equals(player.getUserId())) {
+            me = playerA;
+            you = playerB;
+        }else {
+            me = playerB;
+            you = playerA;
+        }
+
+        return getMapString() + "#" +
+                me.getSx() + "#" +
+                me.getSy() + "#(" +
+                me.getStepsString() + ")#" +
+                you.getSx() + "#" +
+                you.getSy() + "#(" +
+                you.getStepsString() + ")";
+    }
+
+    private void sendBotCode(Player player) {
+        if (player.getBotId().equals(-1)) {
+            return;
+        }
+        MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
+        data.add("user_id", player.getUserId().toString());
+        data.add("bot_code", player.getBotCode());
+        data.add("game_status", getGameStatus(player));
+        WebSocketServer.restTemplate.postForObject(addBotUrl, data, String.class);
+    }
+
     private boolean nextStep() { // 等待两名玩家的下一步操作
         try {
             // 为什么先睡250ms？因为前端需要200ms移动到下一格，期间所有操作全部丢失，而后端却保存了所有操作。前后端不统一了。
@@ -104,6 +159,10 @@ public class Game extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        sendBotCode(playerA);
+        sendBotCode(playerB);
+
         for (int i = 0; i < 50; i ++) {
             try {
                 Thread.sleep(100);

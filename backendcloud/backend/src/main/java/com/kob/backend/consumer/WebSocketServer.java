@@ -2,8 +2,10 @@ package com.kob.backend.consumer;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.kob.backend.mapper.BotMapper;
 import com.kob.backend.mapper.RecordMapper;
 import com.kob.backend.mapper.UserMapper;
+import com.kob.backend.pojo.Bot;
 import com.kob.backend.pojo.User;
 import com.kob.backend.utils.Game;
 import com.kob.backend.utils.JwtUtil;
@@ -28,7 +30,8 @@ public class WebSocketServer {
     public static final ConcurrentHashMap<Integer, WebSocketServer> user_connections = new ConcurrentHashMap<>();
     private static UserMapper userMapper;
     public static RecordMapper recordMapper;
-    private static RestTemplate restTemplate;
+    public static RestTemplate restTemplate;
+    private static BotMapper botMapper;
 
     private static final String addPlayerUrl = "http://127.0.0.1:3001/player/add/";
     private static final String removePlayerUrl = "http://127.0.0.1:3001/player/remove/";
@@ -48,6 +51,14 @@ public class WebSocketServer {
     @Autowired
     private void getRestTemplate(RestTemplate restTemplate) {
         WebSocketServer.restTemplate = restTemplate;
+    }
+    @Autowired
+    private void getBotMapper(BotMapper botMapper) {
+        WebSocketServer.botMapper = botMapper;
+    }
+
+    public Game getGame() {
+        return game;
     }
 
     @OnOpen
@@ -85,10 +96,11 @@ public class WebSocketServer {
         }
     }
 
-    public static void startGame(Integer aId, Integer bId) {
+    public static void startGame(Integer aId, Integer aBotId, Integer bId, Integer bBotId) {
         User a = userMapper.selectById(aId), b = userMapper.selectById(bId);
+        Bot botA = botMapper.selectById(aBotId), botB = botMapper.selectById(bBotId);
 
-        Game game = new Game(13, 14, 20, a.getId(), b.getId());
+        Game game = new Game(13, 14, 20, a.getId(), botA, b.getId(), botB);
         game.createMap();
         if (user_connections.get(a.getId()) != null) {
             user_connections.get(a.getId()).game = game;
@@ -96,8 +108,6 @@ public class WebSocketServer {
         if (user_connections.get(b.getId()) != null) {
             user_connections.get(b.getId()).game = game;
         }
-
-        game.start();
 
         JSONObject respGame = new JSONObject();
         respGame.put("a_id", game.getPlayerA().getUserId());
@@ -125,13 +135,28 @@ public class WebSocketServer {
         if (user_connections.get(b.getId()) != null) {
             user_connections.get(b.getId()).sendMessage(resp2B.toJSONString());
         }
+
+        /*
+            等前端页面加载好再启动游戏，对应于PkIndexView.vue里的：
+            setTimeout(() => {
+                store.commit("updateStatus", "playing");
+            }, 500);
+         */
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        game.start();
     }
 
-    private void startMathcing() {
+    private void startMathcing(Integer botId) {
         System.out.println("start mathcing!");
         MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
         data.add("user_id", user.getId().toString());
         data.add("rating", user.getRating().toString());
+        data.add("bot_id", botId.toString());
         restTemplate.postForObject(addPlayerUrl, data, String.class);
     }
 
@@ -142,11 +167,15 @@ public class WebSocketServer {
         restTemplate.postForObject(removePlayerUrl, data, String.class);
     }
 
-    private void updateMoveDirection(int direction) {
+    public void updateMoveDirection(int direction) {
         if (game.getPlayerA().getUserId().equals(user.getId())) {
-            game.setNextStepA(direction);
+            if (game.getPlayerA().getBotId().equals(-1)) {
+                game.setNextStepA(direction);
+            }
         } else if (game.getPlayerB().getUserId().equals(user.getId())) {
-            game.setNextStepB(direction);
+            if (game.getPlayerB().getBotId().equals(-1)) {
+                game.setNextStepB(direction);
+            }
         }
     }
 
@@ -158,7 +187,7 @@ public class WebSocketServer {
         JSONObject data = JSON.parseObject(message);
         String event = data.getString("event");
         if ("start-matching".equals(event)) {
-            startMathcing();
+            startMathcing(data.getInteger("bot_id"));
         }else if ("stop-matching".equals(event)) {
             stopMathcing();
         }else if ("move_direction".equals(event)) {
