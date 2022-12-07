@@ -64,9 +64,9 @@
                             </thead>
                             <tbody>
                                 <tr v-for="bot in bots" :key="bot.id">
-                                    <th>{{ bot.title }}</th>
-                                    <th>{{ bot.createtime }}</th>
-                                    <th>
+                                    <td>{{ bot.title }}</td>
+                                    <td>{{ bot.createtime }}</td>
+                                    <td>
                                         <button type="button" class="btn btn-primary" style="margin-right:10px;"
                                             data-bs-toggle="modal" :data-bs-target="'#update-bot-btn-' + bot.id"
                                             @click="update_error_message">修改</button>
@@ -113,7 +113,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </th>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

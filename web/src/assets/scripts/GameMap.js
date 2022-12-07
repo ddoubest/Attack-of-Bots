@@ -37,21 +37,45 @@ export class GameMap extends AcGameObject {
     }
 
     add_listening_events() {
-        this.ctx.canvas.focus();
-        this.ctx.canvas.addEventListener("keydown", e => {
-            let d = -1;
-            if (e.key === 'w') d = 0;
-            else if (e.key === 'd') d = 1;
-            else if (e.key === 's') d = 2;
-            else if (e.key === 'a') d = 3;
+        if (!this.store.state.record.is_record) {
+            this.ctx.canvas.focus();
+            this.ctx.canvas.addEventListener("keydown", e => {
+                let d = -1;
+                if (e.key === 'w') d = 0;
+                else if (e.key === 'd') d = 1;
+                else if (e.key === 's') d = 2;
+                else if (e.key === 'a') d = 3;
 
-            if (d >= 0) {
-                this.store.state.pk.socket.send(JSON.stringify({
-                    event: "move_direction",
-                    direction: d,
-                }));
-            }
-        });
+                if (d >= 0) {
+                    this.store.state.pk.socket.send(JSON.stringify({
+                        event: "move_direction",
+                        direction: d,
+                    }));
+                }
+            });
+        } else {
+            let k = 0;
+            const a_steps = this.store.state.record.a_steps;
+            const b_steps = this.store.state.record.b_steps;
+            const [snakeA, snakeB] = this.snakes;
+            const record_loser = this.store.state.record.record_loser;
+
+            const interval_id = setInterval(() => {
+                if (k >= a_steps.length - 1) {
+                    if (record_loser === "A" || record_loser === "all") {
+                        snakeA.status = "die";
+                    }
+                    if (record_loser === "B" || record_loser === "all") {
+                        snakeB.status = "die";
+                    }
+                    clearInterval(interval_id);
+                } else {
+                    snakeA.set_direction(parseInt(a_steps[k]));
+                    snakeB.set_direction(parseInt(b_steps[k]));
+                    k++;
+                }
+            }, 300);
+        }
     }
 
     start() {

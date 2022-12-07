@@ -59,7 +59,7 @@ public class RegisterServiceImpl implements RegisterService {
         user.setId(null);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setPhoto("https://www.acwing.com/user/profile/index/");
+        user.setPhoto("https://cdn.acwing.com/media/user/profile/photo/28992_lg_91a77b0647.jpeg");
         user.setRating(1500);
 
         userMapper.insert(user);

@@ -24,6 +24,7 @@ export default {
         let socket = null;
 
         store.commit("updateLoser", "none");
+        store.commit("updateIsRecord", false);
 
         onMounted(() => {
             store.commit("updateOpponent", {
