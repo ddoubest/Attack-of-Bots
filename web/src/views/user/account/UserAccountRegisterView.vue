@@ -43,7 +43,7 @@ export default {
 
         const register = () => {
             $.ajax({
-                url: "http://127.0.0.1:3000/user/account/register/",
+                url: "https://app4183.acapp.acwing.com.cn/api/user/account/register/",
                 type: "post",
                 headers: {
                 },

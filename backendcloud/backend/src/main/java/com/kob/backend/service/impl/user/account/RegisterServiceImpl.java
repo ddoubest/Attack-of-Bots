@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 @Service
 public class RegisterServiceImpl implements RegisterService {
@@ -20,6 +21,17 @@ public class RegisterServiceImpl implements RegisterService {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    private static final String[] photos = {
+            "https://cdn.acwing.com/media/user/profile/photo/28992_lg_b86d2fb279.jpg",
+            "https://cdn.acwing.com/media/user/profile/photo/209322_lg_38b11c1e0b.jpg",
+            "https://cdn.acwing.com/media/user/profile/photo/121744_lg_65d5c84cca.jpg",
+            "https://cdn.acwing.com/media/user/profile/photo/131391_lg_84a52e733c.jpg",
+            "https://cdn.acwing.com/media/user/profile/photo/2776_lg_0a28607e56.jpg",
+            "https://cdn.acwing.com/media/user/profile/photo/55909_lg_8ccf359b36.jpeg"
+    };
+
+    private static final Random RANDOM = new Random();
 
     @Override
     public Map<String, String> register(String username, String password, String confirmedPassword) {
@@ -59,7 +71,9 @@ public class RegisterServiceImpl implements RegisterService {
         user.setId(null);
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setPhoto("https://cdn.acwing.com/media/user/profile/photo/28992_lg_91a77b0647.jpeg");
+
+        String randomPhoto = photos[RANDOM.nextInt(photos.length)];
+        user.setPhoto(randomPhoto);
         user.setRating(1500);
 
         userMapper.insert(user);

@@ -14,7 +14,7 @@ public class GetRecordListController {
     @Autowired
     private GetRecordListService getRecordListService;
 
-    @GetMapping("/record/getlist/")
+    @GetMapping("/api/record/getlist/")
     private JSONObject getRecordList(@RequestParam Map<String, String> map) {
         Integer page = Integer.parseInt(map.get("page"));
         return getRecordListService.getList(page);
